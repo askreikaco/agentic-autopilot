@@ -277,7 +277,8 @@ final class Agentic_Autopilot_Blueprint_GitHub {
 		);
 
 		if ( is_wp_error( $response ) ) {
-			return new WP_Error( 'bp_api_error', __( 'Failed to fetch file contents.', 'agentic-autopilot' ) );
+			/* translators: %s: underlying HTTP error. */
+			return new WP_Error( 'bp_api_error', sprintf( __( 'Could not reach GitHub: %s', 'agentic-autopilot' ), $response->get_error_message() ) );
 		}
 
 		$code = wp_remote_retrieve_response_code( $response );
@@ -341,7 +342,8 @@ final class Agentic_Autopilot_Blueprint_GitHub {
 			if ( file_exists( $tmp_file ) ) {
 				unlink( $tmp_file );
 			}
-			return new WP_Error( 'bp_download_failed', __( 'Failed to download file from GitHub.', 'agentic-autopilot' ) );
+			/* translators: %s: underlying HTTP error. */
+			return new WP_Error( 'bp_download_failed', sprintf( __( 'Could not download from GitHub: %s', 'agentic-autopilot' ), $response->get_error_message() ) );
 		}
 
 		$code = wp_remote_retrieve_response_code( $response );

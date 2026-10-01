@@ -125,7 +125,7 @@ final class Agentic_Autopilot_Blueprint {
 			return new WP_Error( 'no_repo', 'No repository configured' );
 		}
 
-		$cache_key = self::TRANSIENT_PREFIX . md5( $settings['repo'] . '|' . $settings['ref'] );
+		$cache_key = self::cache_key( $settings );
 
 		if ( ! $force ) {
 			$cached = get_site_transient( $cache_key );
@@ -223,16 +223,18 @@ final class Agentic_Autopilot_Blueprint {
 	 * Clear the catalog cache.
 	 */
 	public static function clear_catalog_cache() {
-		global $wpdb;
-		$prefix = self::TRANSIENT_PREFIX;
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->query(
-			$wpdb->prepare(
-				"DELETE FROM $wpdb->sitemeta WHERE meta_key LIKE %s OR meta_key LIKE %s",
-				'_site_transient_' . $prefix . '%',
-				'_site_transient_timeout_' . $prefix . '%'
-			)
-		);
+		// delete_site_transient() works on single sites, multisite and with an object cache (Redis).
+		delete_site_transient( self::cache_key( self::get() ) );
+	}
+
+	/**
+	 * Cache key for the catalog of the current repo, ref and path.
+	 *
+	 * @param array $settings Blueprint settings.
+	 * @return string
+	 */
+	private static function cache_key( $settings ) {
+		return self::TRANSIENT_PREFIX . md5( $settings['repo'] . '|' . $settings['ref'] . '|' . $settings['path'] );
 	}
 
 	/**

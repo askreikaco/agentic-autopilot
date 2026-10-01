@@ -281,7 +281,8 @@ if [ "${BLUEPRINT_SKIP:-0}" != "1" ]; then
 	echo "Check 9b: Blueprint install from a test fixture repo..."
 
 	# Determine the ref to use
-	BLUEPRINT_REF="${BLUEPRINT_REF:-$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo 'blueprint')}"
+	# The commit under test (it exists on GitHub in CI). Override locally with a pushed branch name.
+	BLUEPRINT_REF="${BLUEPRINT_REF:-$(git -C "$REPO_ROOT" rev-parse HEAD)}"
 
 	# Set the Blueprint option with repo and ref
 	$WP option update agentic_autopilot_blueprint "{\"repo\":\"askreikaco/agentic-autopilot\",\"ref\":\"$BLUEPRINT_REF\",\"path\":\"tests/fixtures/blueprint/catalog.json\",\"auto_install\":false,\"activate_after_install\":true,\"auto_update\":false,\"excluded\":[],\"expose_to_agents\":false}" --format=json
@@ -291,12 +292,9 @@ if [ "${BLUEPRINT_SKIP:-0}" != "1" ]; then
 
 	if [ "$INSTALL_RESULT" != "OK" ]; then
 		echo "ERROR: Blueprint install failed: $INSTALL_RESULT"
-		# Allow BLUEPRINT_REF override for local testing
-		if [ "$BLUEPRINT_REF" = "$(git -C "$REPO_ROOT" rev-parse HEAD)" ]; then
-			exit 1
-		else
-			echo "SKIP: Blueprint test (using ref override, not on GitHub)"
-		fi
+		echo "Catalog as the plugin sees it:"
+		$WP eval 'print_r( Agentic_Autopilot_Blueprint::catalog( true ) ); print_r( Agentic_Autopilot_Blueprint::get() );' || true
+		exit 1
 	else
 		# Verify plugin is active
 		if ! $WP plugin is-active hello-blueprint 2>/dev/null; then

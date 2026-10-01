@@ -19,19 +19,21 @@ delete_site_transient( 'agentic_autopilot_mcp_release' );
 delete_option( 'agentic_autopilot_blueprint' );
 delete_option( 'agentic_autopilot_bp_token' );
 
-// Delete Blueprint catalog cache transients.
+// Delete Blueprint catalog cache transients (stored in sitemeta on multisite, options otherwise).
 global $wpdb;
-// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+$aa_table = is_multisite() ? $wpdb->sitemeta : $wpdb->options;
+$aa_col   = is_multisite() ? 'meta_key' : 'option_name';
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 $wpdb->query(
 	$wpdb->prepare(
-		"DELETE FROM $wpdb->sitemeta WHERE meta_key LIKE %s OR meta_key LIKE %s",
-		'_site_transient_agentic_autopilot_bp_%',
-		'_site_transient_timeout_agentic_autopilot_bp_%'
+		"DELETE FROM {$aa_table} WHERE {$aa_col} LIKE %s OR {$aa_col} LIKE %s",
+		$wpdb->esc_like( '_site_transient_agentic_autopilot_bp_' ) . '%',
+		$wpdb->esc_like( '_site_transient_timeout_agentic_autopilot_bp_' ) . '%'
 	)
 );
 
 // Clear Blueprint cron hook.
-wp_unschedule_event( wp_next_scheduled( 'agentic_autopilot_blueprint_daily' ), 'agentic_autopilot_blueprint_daily' );
+wp_clear_scheduled_hook( 'agentic_autopilot_blueprint_daily' );
 
 // Old names (migration compatibility).
 delete_option( 'wpautopilot' );
