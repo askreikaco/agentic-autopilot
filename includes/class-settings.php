@@ -1,8 +1,8 @@
 <?php
 /**
- * Settings: one option, one screen under Settings → REIKA Site Kit.
+ * Settings: one option, one screen under Settings → WP Autopilot.
  *
- * @package ReikaSiteKit
+ * @package WPAutopilot
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -10,10 +10,10 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Stores and renders the plugin settings.
  */
-final class Reika_Site_Kit_Settings {
+final class WPAutopilot_Settings {
 
-	const OPTION = 'reika_site_kit';
-	const PAGE   = 'reika-site-kit';
+	const OPTION = 'wpautopilot';
+	const PAGE   = 'wp-autopilot';
 
 	/**
 	 * Default values. Every feature is off until an admin turns it on.
@@ -28,6 +28,16 @@ final class Reika_Site_Kit_Settings {
 			'speculation_exclude'    => "/*.pdf\n/*.zip",
 			'jetpack_monitor_only'   => false,
 		);
+	}
+
+	/**
+	 * Migrate settings from the old option name if needed.
+	 */
+	public static function maybe_migrate() {
+		if ( false === get_option( self::OPTION ) && is_array( get_option( 'reika_site_kit' ) ) ) {
+			update_option( self::OPTION, get_option( 'reika_site_kit' ) );
+			delete_option( 'reika_site_kit' );
+		}
 	}
 
 	/**
@@ -46,7 +56,7 @@ final class Reika_Site_Kit_Settings {
 	public static function init() {
 		add_action( 'admin_init', array( __CLASS__, 'register' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
-		add_filter( 'plugin_action_links_' . plugin_basename( REIKA_SITE_KIT_FILE ), array( __CLASS__, 'action_links' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( WPAUTOPILOT_FILE ), array( __CLASS__, 'action_links' ) );
 	}
 
 	/**
@@ -103,8 +113,8 @@ final class Reika_Site_Kit_Settings {
 	 */
 	public static function menu() {
 		add_options_page(
-			__( 'REIKA Site Kit', 'reika-site-kit' ),
-			__( 'REIKA Site Kit', 'reika-site-kit' ),
+			__( 'WP Autopilot', 'wp-autopilot' ),
+			__( 'WP Autopilot', 'wp-autopilot' ),
 			'manage_options',
 			self::PAGE,
 			array( __CLASS__, 'render' )
@@ -119,7 +129,7 @@ final class Reika_Site_Kit_Settings {
 	 */
 	public static function action_links( $links ) {
 		$url = admin_url( 'options-general.php?page=' . self::PAGE );
-		array_unshift( $links, '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Settings', 'reika-site-kit' ) . '</a>' );
+		array_unshift( $links, '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Settings', 'wp-autopilot' ) . '</a>' );
 		return $links;
 	}
 
@@ -134,49 +144,49 @@ final class Reika_Site_Kit_Settings {
 		$name = self::OPTION;
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'REIKA Site Kit', 'reika-site-kit' ); ?></h1>
+			<h1><?php esc_html_e( 'WP Autopilot', 'wp-autopilot' ); ?></h1>
 			<form method="post" action="options.php">
 				<?php settings_fields( self::PAGE ); ?>
-				<h2><?php esc_html_e( 'Instant navigation', 'reika-site-kit' ); ?></h2>
-				<p><?php esc_html_e( 'Uses the Speculation Rules built into WordPress: when a visitor hovers or presses a link, the next page is loaded in the background so it opens instantly. Admin, login, query-string and nofollow links are always excluded by WordPress. Browsers without support simply ignore it.', 'reika-site-kit' ); ?></p>
+				<h2><?php esc_html_e( 'Instant navigation', 'wp-autopilot' ); ?></h2>
+				<p><?php esc_html_e( 'Uses the Speculation Rules built into WordPress: when a visitor hovers or presses a link, the next page is loaded in the background so it opens instantly. Admin, login, query-string and nofollow links are always excluded by WordPress. Browsers without support simply ignore it.', 'wp-autopilot' ); ?></p>
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Enable', 'reika-site-kit' ); ?></th>
-						<td><label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[instant_navigation]" value="1" <?php checked( $s['instant_navigation'] ); ?>> <?php esc_html_e( 'Load the next page before the click', 'reika-site-kit' ); ?></label></td>
+						<th scope="row"><?php esc_html_e( 'Enable', 'wp-autopilot' ); ?></th>
+						<td><label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[instant_navigation]" value="1" <?php checked( $s['instant_navigation'] ); ?>> <?php esc_html_e( 'Load the next page before the click', 'wp-autopilot' ); ?></label></td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="rsk-mode"><?php esc_html_e( 'Mode', 'reika-site-kit' ); ?></label></th>
+						<th scope="row"><label for="rsk-mode"><?php esc_html_e( 'Mode', 'wp-autopilot' ); ?></label></th>
 						<td>
 							<select id="rsk-mode" name="<?php echo esc_attr( $name ); ?>[speculation_mode]">
-								<option value="prerender" <?php selected( $s['speculation_mode'], 'prerender' ); ?>><?php esc_html_e( 'Prerender (fastest: the whole page is rendered)', 'reika-site-kit' ); ?></option>
-								<option value="prefetch" <?php selected( $s['speculation_mode'], 'prefetch' ); ?>><?php esc_html_e( 'Prefetch (lighter: only the HTML is downloaded)', 'reika-site-kit' ); ?></option>
+								<option value="prerender" <?php selected( $s['speculation_mode'], 'prerender' ); ?>><?php esc_html_e( 'Prerender (fastest: the whole page is rendered)', 'wp-autopilot' ); ?></option>
+								<option value="prefetch" <?php selected( $s['speculation_mode'], 'prefetch' ); ?>><?php esc_html_e( 'Prefetch (lighter: only the HTML is downloaded)', 'wp-autopilot' ); ?></option>
 							</select>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="rsk-eager"><?php esc_html_e( 'When', 'reika-site-kit' ); ?></label></th>
+						<th scope="row"><label for="rsk-eager"><?php esc_html_e( 'When', 'wp-autopilot' ); ?></label></th>
 						<td>
 							<select id="rsk-eager" name="<?php echo esc_attr( $name ); ?>[speculation_eagerness]">
-								<option value="moderate" <?php selected( $s['speculation_eagerness'], 'moderate' ); ?>><?php esc_html_e( 'Moderate: on hover (recommended)', 'reika-site-kit' ); ?></option>
-								<option value="conservative" <?php selected( $s['speculation_eagerness'], 'conservative' ); ?>><?php esc_html_e( 'Conservative: on click/tap', 'reika-site-kit' ); ?></option>
-								<option value="eager" <?php selected( $s['speculation_eagerness'], 'eager' ); ?>><?php esc_html_e( 'Eager: as soon as possible', 'reika-site-kit' ); ?></option>
+								<option value="moderate" <?php selected( $s['speculation_eagerness'], 'moderate' ); ?>><?php esc_html_e( 'Moderate: on hover (recommended)', 'wp-autopilot' ); ?></option>
+								<option value="conservative" <?php selected( $s['speculation_eagerness'], 'conservative' ); ?>><?php esc_html_e( 'Conservative: on click/tap', 'wp-autopilot' ); ?></option>
+								<option value="eager" <?php selected( $s['speculation_eagerness'], 'eager' ); ?>><?php esc_html_e( 'Eager: as soon as possible', 'wp-autopilot' ); ?></option>
 							</select>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="rsk-exclude"><?php esc_html_e( 'Also exclude', 'reika-site-kit' ); ?></label></th>
+						<th scope="row"><label for="rsk-exclude"><?php esc_html_e( 'Also exclude', 'wp-autopilot' ); ?></label></th>
 						<td>
 							<textarea id="rsk-exclude" class="large-text code" rows="4" name="<?php echo esc_attr( $name ); ?>[speculation_exclude]"><?php echo esc_textarea( $s['speculation_exclude'] ); ?></textarea>
-							<p class="description"><?php esc_html_e( 'One path pattern per line, starting with "/" (for example /*.pdf or /checkout/*). Add the class no-prerender to any link or container to exclude it.', 'reika-site-kit' ); ?></p>
+							<p class="description"><?php esc_html_e( 'One path pattern per line, starting with "/" (for example /*.pdf or /checkout/*). Add the class no-prerender to any link or container to exclude it.', 'wp-autopilot' ); ?></p>
 						</td>
 					</tr>
 				</table>
-				<h2><?php esc_html_e( 'Jetpack', 'reika-site-kit' ); ?></h2>
+				<h2><?php esc_html_e( 'Jetpack', 'wp-autopilot' ); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Monitor only', 'reika-site-kit' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Monitor only', 'wp-autopilot' ); ?></th>
 						<td>
-							<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[jetpack_monitor_only]" value="1" <?php checked( $s['jetpack_monitor_only'] ); ?>> <?php esc_html_e( 'Keep only the Downtime Monitor module; every other Jetpack module (stats, forms, subscriptions…) is unavailable and cannot be switched on.', 'reika-site-kit' ); ?></label>
+							<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[jetpack_monitor_only]" value="1" <?php checked( $s['jetpack_monitor_only'] ); ?>> <?php esc_html_e( 'Keep only the Downtime Monitor module; every other Jetpack module (stats, forms, subscriptions…) is unavailable and cannot be switched on.', 'wp-autopilot' ); ?></label>
 						</td>
 					</tr>
 				</table>
