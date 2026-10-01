@@ -2,7 +2,7 @@
 /**
  * Jetpack: Downtime Monitor only.
  *
- * @package ReikaSiteKit
+ * @package WPAutopilot
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -11,13 +11,13 @@ defined( 'ABSPATH' ) || exit;
  * Hides every Jetpack module except "monitor". Jetpack only loads modules that
  * are available, so this also switches off any module that was active.
  */
-final class Reika_Site_Kit_Jetpack_Monitor_Only {
+final class WPAutopilot_Jetpack_Monitor_Only {
 
 	/**
 	 * Hooks.
 	 */
 	public static function init() {
-		if ( ! Reika_Site_Kit_Settings::get()['jetpack_monitor_only'] ) {
+		if ( ! WPAutopilot_Settings::get()['jetpack_monitor_only'] ) {
 			return;
 		}
 		add_filter( 'jetpack_get_available_modules', array( __CLASS__, 'available_modules' ), 99 );

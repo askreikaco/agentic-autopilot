@@ -2,7 +2,7 @@
 /**
  * Instant navigation through the WordPress core Speculation Rules API (WordPress 6.8+).
  *
- * @package ReikaSiteKit
+ * @package WPAutopilot
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -10,13 +10,13 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Configures core speculative loading; prints nothing of its own.
  */
-final class Reika_Site_Kit_Instant_Navigation {
+final class WPAutopilot_Instant_Navigation {
 
 	/**
 	 * Hooks.
 	 */
 	public static function init() {
-		if ( ! Reika_Site_Kit_Settings::get()['instant_navigation'] ) {
+		if ( ! WPAutopilot_Settings::get()['instant_navigation'] ) {
 			return;
 		}
 		add_filter( 'wp_speculation_rules_configuration', array( __CLASS__, 'configuration' ) );
@@ -35,7 +35,7 @@ final class Reika_Site_Kit_Instant_Navigation {
 		if ( null === $config ) {
 			return null;
 		}
-		$s = Reika_Site_Kit_Settings::get();
+		$s = WPAutopilot_Settings::get();
 		return array(
 			'mode'      => $s['speculation_mode'],
 			'eagerness' => $s['speculation_eagerness'],
@@ -49,7 +49,7 @@ final class Reika_Site_Kit_Instant_Navigation {
 	 * @return string[]
 	 */
 	public static function exclude_paths( $paths ) {
-		$extra = array_filter( array_map( 'trim', explode( "\n", Reika_Site_Kit_Settings::get()['speculation_exclude'] ) ) );
+		$extra = array_filter( array_map( 'trim', explode( "\n", WPAutopilot_Settings::get()['speculation_exclude'] ) ) );
 		return array_values( array_unique( array_merge( (array) $paths, $extra ) ) );
 	}
 }

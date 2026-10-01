@@ -6,7 +6,7 @@
  * Update URI on that host. If this plugin is ever served from WordPress.org,
  * remove the Update URI header and this file (WordPress.org forbids self-updaters).
  *
- * @package ReikaSiteKit
+ * @package WPAutopilot
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -14,11 +14,11 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Looks up the latest GitHub release and offers it as an update.
  */
-final class Reika_Site_Kit_GitHub_Updater {
+final class WPAutopilot_GitHub_Updater {
 
-	const REPO      = 'askreikaco/reika-site-kit';
-	const SLUG      = 'reika-site-kit';
-	const TRANSIENT = 'reika_site_kit_latest_release';
+	const REPO      = 'askreikaco/wp-autopilot';
+	const SLUG      = 'wp-autopilot';
+	const TRANSIENT = 'wpautopilot_latest_release';
 
 	/**
 	 * Hooks.
@@ -80,7 +80,7 @@ final class Reika_Site_Kit_GitHub_Updater {
 	 * @return array|false
 	 */
 	public static function check( $update, $plugin_data, $plugin_file ) {
-		if ( plugin_basename( REIKA_SITE_KIT_FILE ) !== $plugin_file ) {
+		if ( plugin_basename( WPAUTOPILOT_FILE ) !== $plugin_file ) {
 			return $update;
 		}
 		$release = self::latest();
@@ -100,7 +100,7 @@ final class Reika_Site_Kit_GitHub_Updater {
 	}
 
 	/**
-	 * GitHub source archives unpack to "askreikaco-reika-site-kit-<sha>/";
+	 * GitHub source archives unpack to "askreikaco-wp-autopilot-<sha>/";
 	 * rename that to the plugin folder so the update replaces the plugin in place.
 	 *
 	 * @param string      $source        Unpacked source path.
@@ -111,7 +111,7 @@ final class Reika_Site_Kit_GitHub_Updater {
 	 */
 	public static function fix_folder_name( $source, $remote_source, $upgrader, $hook_extra = array() ) {
 		global $wp_filesystem;
-		if ( empty( $hook_extra['plugin'] ) || plugin_basename( REIKA_SITE_KIT_FILE ) !== $hook_extra['plugin'] ) {
+		if ( empty( $hook_extra['plugin'] ) || plugin_basename( WPAUTOPILOT_FILE ) !== $hook_extra['plugin'] ) {
 			return $source;
 		}
 		$wanted = trailingslashit( $remote_source ) . self::SLUG . '/';
@@ -121,7 +121,7 @@ final class Reika_Site_Kit_GitHub_Updater {
 		if ( $wp_filesystem && $wp_filesystem->move( $source, $wanted, true ) ) {
 			return $wanted;
 		}
-		return new WP_Error( 'reika_site_kit_rename', __( 'Could not rename the downloaded REIKA Site Kit folder.', 'reika-site-kit' ) );
+		return new WP_Error( 'wpautopilot_rename', __( 'Could not rename the downloaded WP Autopilot folder.', 'wp-autopilot' ) );
 	}
 
 	/**
@@ -138,16 +138,16 @@ final class Reika_Site_Kit_GitHub_Updater {
 		}
 		$release = self::latest();
 		return (object) array(
-			'name'          => 'REIKA Site Kit',
+			'name'          => 'WP Autopilot',
 			'slug'          => self::SLUG,
-			'version'       => $release ? $release['version'] : REIKA_SITE_KIT_VERSION,
+			'version'       => $release ? $release['version'] : WPAUTOPILOT_VERSION,
 			'author'        => '<a href="https://reika.co">REIKA</a>',
 			'homepage'      => 'https://github.com/' . self::REPO,
 			'requires'      => '6.8',
 			'requires_php'  => '7.4',
 			'download_link' => $release ? $release['package'] : '',
 			'sections'      => array(
-				'description' => esc_html__( 'Small, opt-in site-wide features: instant navigation (prerender on hover) and Jetpack "Monitor only".', 'reika-site-kit' ),
+				'description' => esc_html__( 'Puts routine site speed and housekeeping on autopilot: instant navigation (prerender on hover) and Jetpack "Monitor only". Every feature is opt-in.', 'wp-autopilot' ),
 				'changelog'   => $release ? wp_kses_post( wpautop( $release['notes'] ) ) : '',
 			),
 		);
