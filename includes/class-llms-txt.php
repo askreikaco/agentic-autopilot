@@ -215,16 +215,21 @@ final class Agentic_Autopilot_Llms_Txt {
 	}
 
 	/**
-	 * Absolute URL of a post in its own language (WPML/Polylang-safe), or '' if it has none.
+	 * Absolute URL of a post in its own language (WPML-aware), or '' if it has none.
 	 *
 	 * @param int $post_id Post ID.
 	 * @return string
 	 */
 	private static function permalink( $post_id ) {
-		$url  = (string) get_permalink( $post_id );
 		$lang = apply_filters( 'wpml_post_language_details', null, $post_id );
 		if ( is_array( $lang ) && ! empty( $lang['language_code'] ) ) {
-			$url = (string) apply_filters( 'wpml_permalink', $url, $lang['language_code'] );
+			// Build the URL in the post's own language (slug and /xx/ prefix).
+			$current = apply_filters( 'wpml_current_language', null );
+			do_action( 'wpml_switch_language', $lang['language_code'] );
+			$url = (string) get_permalink( $post_id );
+			do_action( 'wpml_switch_language', $current );
+		} else {
+			$url = (string) get_permalink( $post_id );
 		}
 		return 0 === strpos( $url, 'http' ) ? $url : '';
 	}
