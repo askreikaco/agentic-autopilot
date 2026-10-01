@@ -2,11 +2,17 @@
 /**
  * Remove plugin data on uninstall.
  *
- * @package WPAutopilot
+ * @package AgenticAutopilot
  */
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
+// New names (v1.2.0+).
+delete_option( 'agentic_autopilot' );
+delete_site_transient( 'agentic_autopilot_latest_release' );
+delete_transient( 'agentic_autopilot_llms_txt' );
+
+// Old names (migration compatibility).
 delete_option( 'wpautopilot' );
 delete_option( 'reika_site_kit' );
 delete_site_transient( 'wpautopilot_latest_release' );
