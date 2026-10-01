@@ -151,9 +151,14 @@ final class Agentic_Autopilot_Llms_Txt {
 				continue;
 			}
 
+			$permalink = self::permalink( $id );
+			if ( ! $permalink ) {
+				continue;
+			}
+
 			$items[] = array(
 				'title'       => self::clean_text( $post->post_title ),
-				'permalink'   => get_permalink( $id ),
+				'permalink'   => $permalink,
 				'description' => self::get_description( $id ),
 			);
 		}
@@ -194,14 +199,34 @@ final class Agentic_Autopilot_Llms_Txt {
 				continue;
 			}
 
+			$permalink = self::permalink( $id );
+			if ( ! $permalink ) {
+				continue;
+			}
+
 			$items[] = array(
 				'title'       => self::clean_text( $post->post_title ),
-				'permalink'   => get_permalink( $id ),
+				'permalink'   => $permalink,
 				'description' => self::get_description( $id ),
 			);
 		}
 
 		return $items;
+	}
+
+	/**
+	 * Absolute URL of a post in its own language (WPML/Polylang-safe), or '' if it has none.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string
+	 */
+	private static function permalink( $post_id ) {
+		$url  = (string) get_permalink( $post_id );
+		$lang = apply_filters( 'wpml_post_language_details', null, $post_id );
+		if ( is_array( $lang ) && ! empty( $lang['language_code'] ) ) {
+			$url = (string) apply_filters( 'wpml_permalink', $url, $lang['language_code'], true );
+		}
+		return 0 === strpos( $url, 'http' ) ? $url : '';
 	}
 
 	/**
