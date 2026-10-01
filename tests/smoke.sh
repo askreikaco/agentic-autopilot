@@ -276,6 +276,47 @@ SETTINGS_AFTER=$($WP option get agentic_autopilot --format=json)
 echo "Settings after reactivate: $SETTINGS_AFTER"
 echo "PASS: Plugin deactivate/reactivate successful"
 
+# Check 9b: Blueprint install from a test fixture repo
+if [ "${BLUEPRINT_SKIP:-0}" != "1" ]; then
+	echo "Check 9b: Blueprint install from a test fixture repo..."
+
+	# Determine the ref to use
+	BLUEPRINT_REF="${BLUEPRINT_REF:-$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo 'blueprint')}"
+
+	# Set the Blueprint option with repo and ref
+	$WP option update agentic_autopilot_blueprint "{\"repo\":\"askreikaco/agentic-autopilot\",\"ref\":\"$BLUEPRINT_REF\",\"path\":\"tests/fixtures/blueprint/catalog.json\",\"auto_install\":false,\"activate_after_install\":true,\"auto_update\":false,\"excluded\":[],\"expose_to_agents\":false}" --format=json
+
+	# Try to install hello-blueprint plugin
+	INSTALL_RESULT=$($WP eval 'wp_set_current_user(1); $r = Agentic_Autopilot_Blueprint::install("plugins","hello-blueprint"); echo is_wp_error($r) ? "ERR ".$r->get_error_message() : "OK";' 2>&1)
+
+	if [ "$INSTALL_RESULT" != "OK" ]; then
+		echo "ERROR: Blueprint install failed: $INSTALL_RESULT"
+		# Allow BLUEPRINT_REF override for local testing
+		if [ "$BLUEPRINT_REF" = "$(git -C "$REPO_ROOT" rev-parse HEAD)" ]; then
+			exit 1
+		else
+			echo "SKIP: Blueprint test (using ref override, not on GitHub)"
+		fi
+	else
+		# Verify plugin is active
+		if ! $WP plugin is-active hello-blueprint 2>/dev/null; then
+			echo "ERROR: hello-blueprint not active after install"
+			exit 1
+		fi
+
+		# Verify status shows current
+		STATUS_RESULT=$($WP eval 'wp_set_current_user(1); $status = Agentic_Autopilot_Blueprint::items_status(); $s = $status["hello-blueprint"] ?? null; echo $s && "current" === $s["state"] ? "OK" : "NOT_CURRENT";' 2>&1)
+		if [ "$STATUS_RESULT" != "OK" ]; then
+			echo "ERROR: Blueprint status not current for hello-blueprint"
+			exit 1
+		fi
+
+		echo "PASS: Blueprint install and activate successful"
+	fi
+else
+	echo "SKIP: Blueprint test (BLUEPRINT_SKIP=1)"
+fi
+
 # Final success message
 echo ""
 # Check 10: uninstall removes our data

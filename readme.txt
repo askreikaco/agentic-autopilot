@@ -1,10 +1,10 @@
 === Agentic Autopilot ===
 Contributors: reika
-Tags: performance, speculation rules, llms.txt, mcp, ai
+Tags: performance, speculation rules, llms.txt, mcp, ai, blueprint, github
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,6 +22,9 @@ Every feature is off until you switch it on in Settings → Agentic Autopilot.
 No tracking, no external requests on the front end. The plugin checks GitHub for new releases from the admin only. The MCP Adapter code itself is not bundled; it is downloaded from its official GitHub releases.
 
 == Changelog ==
+
+= 1.4.0 =
+* New: Blueprint, connect any GitHub repo to install and update a set of plugins and themes. Includes auto-install, auto-update, and AI agent abilities for agents to manage items and fetch config files.
 
 = 1.3.0 =
 * New: one-click download and activation of the official WordPress MCP Adapter, kept updated from its GitHub releases.

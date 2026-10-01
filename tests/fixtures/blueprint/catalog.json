@@ -1,0 +1,18 @@
+[
+	{
+		"type": "plugins",
+		"slug": "hello-blueprint",
+		"name": "Hello Blueprint",
+		"version": "1.0.0",
+		"main_file": "hello-blueprint.php",
+		"location": "tests/fixtures/blueprint/plugins/hello-blueprint.zip"
+	},
+	{
+		"type": "config",
+		"slug": "example-config",
+		"name": "Example Config",
+		"location": "tests/fixtures/blueprint/config/example.json",
+		"for": "hello-blueprint",
+		"notes": "Example configuration file"
+	}
+]
