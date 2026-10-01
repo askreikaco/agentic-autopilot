@@ -355,29 +355,30 @@ final class Agentic_Autopilot_Blueprint {
 
 		if ( 'plugins' === $type ) {
 			$upgrader = new Plugin_Upgrader( new WP_Ajax_Upgrader_Skin() );
-			$result   = $upgrader->install( $package );
-
-			if ( ! is_wp_error( $result ) && $result ) {
-				$settings = self::get();
-				if ( $settings['activate_after_install'] ) {
-					$file = $statuses[ $slug ]['file'];
-					activate_plugin( $file );
-				}
-			}
 		} else {
 			$upgrader = new Theme_Upgrader( new WP_Ajax_Upgrader_Skin() );
-			$result   = $upgrader->install( $package );
 		}
+		$result = $upgrader->install( $package );
 
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 
-		// Check if skin has errors.
-		if ( method_exists( $upgrader->skin, 'get_errors' ) ) {
-			$skin_errors = $upgrader->skin->get_errors();
-			if ( is_wp_error( $skin_errors ) ) {
-				return $skin_errors;
+		// The skin always holds a WP_Error object; only a non-empty one means failure.
+		$skin_errors = method_exists( $upgrader->skin, 'get_errors' ) ? $upgrader->skin->get_errors() : null;
+		if ( is_wp_error( $skin_errors ) && $skin_errors->has_errors() ) {
+			return $skin_errors;
+		}
+
+		if ( true !== $result ) {
+			$detail = method_exists( $upgrader->skin, 'get_error_messages' ) ? $upgrader->skin->get_error_messages() : '';
+			return new WP_Error( 'install_failed', trim( 'Install failed. ' . $detail ) );
+		}
+
+		if ( 'plugins' === $type && self::get()['activate_after_install'] ) {
+			$activated = activate_plugin( $statuses[ $slug ]['file'] );
+			if ( is_wp_error( $activated ) ) {
+				return $activated;
 			}
 		}
 
