@@ -3,14 +3,42 @@ on:
   push:
     branches: [main]
   pull_request:
+
+permissions:
+  contents: read
+
 jobs:
   php-lint:
     # Self-hosted REIKA runner. Never run code from forks on it.
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, reika-droplet]
+    strategy:
+      matrix:
+        php: ['/usr/bin/php7.4', '/usr/bin/php8.5']
     steps:
       - uses: actions/checkout@v4
       - name: php -l
         run: |
           set -e
-          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 ${{ matrix.php }} -l
+
+  smoke:
+    needs: php-lint
+    # Self-hosted REIKA runner. Never run code from forks on it.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, reika-droplet]
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - php: /usr/bin/php7.4
+            wp: '6.8'
+          - php: /usr/bin/php8.5
+            wp: latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run smoke test
+        run: bash tests/smoke.sh ${{ matrix.php }} ${{ matrix.wp }}

@@ -12,6 +12,9 @@ delete_option( 'agentic_autopilot' );
 delete_site_transient( 'agentic_autopilot_latest_release' );
 delete_transient( 'agentic_autopilot_llms_txt' );
 
+// New names (v1.3.0+).
+delete_site_transient( 'agentic_autopilot_mcp_release' );
+
 // Old names (migration compatibility).
 delete_option( 'wpautopilot' );
 delete_option( 'reika_site_kit' );
