@@ -1,0 +1,16 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  php-lint:
+    # Self-hosted REIKA runner. Never run code from forks on it.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, reika-droplet]
+    steps:
+      - uses: actions/checkout@v4
+      - name: php -l
+        run: |
+          set -e
+          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
