@@ -224,7 +224,7 @@ final class Agentic_Autopilot_Llms_Txt {
 		$url  = (string) get_permalink( $post_id );
 		$lang = apply_filters( 'wpml_post_language_details', null, $post_id );
 		if ( is_array( $lang ) && ! empty( $lang['language_code'] ) ) {
-			$url = (string) apply_filters( 'wpml_permalink', $url, $lang['language_code'], true );
+			$url = (string) apply_filters( 'wpml_permalink', $url, $lang['language_code'] );
 		}
 		return 0 === strpos( $url, 'http' ) ? $url : '';
 	}
