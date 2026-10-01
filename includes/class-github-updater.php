@@ -6,7 +6,7 @@
  * Update URI on that host. If this plugin is ever served from WordPress.org,
  * remove the Update URI header and this file (WordPress.org forbids self-updaters).
  *
- * @package WPAutopilot
+ * @package AgenticAutopilot
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -14,11 +14,11 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Looks up the latest GitHub release and offers it as an update.
  */
-final class WPAutopilot_GitHub_Updater {
+final class Agentic_Autopilot_GitHub_Updater {
 
-	const REPO      = 'askreikaco/wp-autopilot';
-	const SLUG      = 'wp-autopilot';
-	const TRANSIENT = 'wpautopilot_latest_release';
+	const REPO      = 'askreikaco/agentic-autopilot';
+	const SLUG      = 'agentic-autopilot';
+	const TRANSIENT = 'agentic_autopilot_latest_release';
 
 	/**
 	 * Hooks.
@@ -80,7 +80,7 @@ final class WPAutopilot_GitHub_Updater {
 	 * @return array|false
 	 */
 	public static function check( $update, $plugin_data, $plugin_file ) {
-		if ( plugin_basename( WPAUTOPILOT_FILE ) !== $plugin_file ) {
+		if ( plugin_basename( AGENTIC_AUTOPILOT_FILE ) !== $plugin_file ) {
 			return $update;
 		}
 		$release = self::latest();
@@ -100,7 +100,7 @@ final class WPAutopilot_GitHub_Updater {
 	}
 
 	/**
-	 * GitHub source archives unpack to "askreikaco-wp-autopilot-<sha>/";
+	 * GitHub source archives unpack to "askreikaco-agentic-autopilot-<sha>/";
 	 * rename that to the plugin folder so the update replaces the plugin in place.
 	 *
 	 * @param string      $source        Unpacked source path.
@@ -111,7 +111,7 @@ final class WPAutopilot_GitHub_Updater {
 	 */
 	public static function fix_folder_name( $source, $remote_source, $upgrader, $hook_extra = array() ) {
 		global $wp_filesystem;
-		if ( empty( $hook_extra['plugin'] ) || plugin_basename( WPAUTOPILOT_FILE ) !== $hook_extra['plugin'] ) {
+		if ( empty( $hook_extra['plugin'] ) || plugin_basename( AGENTIC_AUTOPILOT_FILE ) !== $hook_extra['plugin'] ) {
 			return $source;
 		}
 		$wanted = trailingslashit( $remote_source ) . self::SLUG . '/';
@@ -121,7 +121,7 @@ final class WPAutopilot_GitHub_Updater {
 		if ( $wp_filesystem && $wp_filesystem->move( $source, $wanted, true ) ) {
 			return $wanted;
 		}
-		return new WP_Error( 'wpautopilot_rename', __( 'Could not rename the downloaded WP Autopilot folder.', 'wp-autopilot' ) );
+		return new WP_Error( 'agentic_autopilot_rename', __( 'Could not rename the downloaded Agentic Autopilot folder.', 'agentic-autopilot' ) );
 	}
 
 	/**
@@ -138,16 +138,16 @@ final class WPAutopilot_GitHub_Updater {
 		}
 		$release = self::latest();
 		return (object) array(
-			'name'          => 'WP Autopilot',
+			'name'          => 'Agentic Autopilot',
 			'slug'          => self::SLUG,
-			'version'       => $release ? $release['version'] : WPAUTOPILOT_VERSION,
+			'version'       => $release ? $release['version'] : AGENTIC_AUTOPILOT_VERSION,
 			'author'        => '<a href="https://reika.co">REIKA</a>',
 			'homepage'      => 'https://github.com/' . self::REPO,
 			'requires'      => '6.8',
 			'requires_php'  => '7.4',
 			'download_link' => $release ? $release['package'] : '',
 			'sections'      => array(
-				'description' => esc_html__( 'Puts routine site speed and housekeeping on autopilot: instant navigation (prerender on hover) and Jetpack "Monitor only". Every feature is opt-in.', 'wp-autopilot' ),
+				'description' => esc_html__( 'Make WordPress feel instant and ready for AI agents: llms.txt for AI search, speculative prerender on hover, Jetpack Monitor-only mode, and GitHub auto-updates.', 'agentic-autopilot' ),
 				'changelog'   => $release ? wp_kses_post( wpautop( $release['notes'] ) ) : '',
 			),
 		);
