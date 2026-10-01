@@ -20,7 +20,17 @@ if [ ! -f "$WP_CLI_BIN" ]; then
 fi
 
 WORK=$(mktemp -d)
-trap 'kill ${SERVER_PID:-0} 2>/dev/null || true; rm -rf "$WORK"' EXIT
+# Repo root = the folder that holds tests/ (works locally and on the CI runner).
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SERVER_PID=""
+# Only ever kill our own PHP server (never "kill 0", which would hit the whole process group).
+cleanup() {
+	if [ -n "$SERVER_PID" ]; then
+		kill "$SERVER_PID" 2>/dev/null || true
+	fi
+	rm -rf "$WORK"
+}
+trap cleanup EXIT
 
 # Simplify: just use basics without --skip-themes --skip-plugins
 WP="$PHP $WP_CLI_BIN --path=$WORK/wp --allow-root"
@@ -115,9 +125,12 @@ $WP option update agentic_autopilot '{"instant_navigation":true,"llms_txt":true,
 
 echo "=== Simulate upgrade: replace plugin folder with current checkout ==="
 
-# Copy current checkout (excluding .git, .github, tests)
-rsync -a --exclude=.git --exclude=.github --exclude=tests --exclude=.gitattributes \
-	/home/user/wp-autopilot/ "$WORK/wp/wp-content/plugins/agentic-autopilot/"
+# Replace the whole folder like WordPress does (old files must not linger), using only tar.
+NEW_DIR="$WORK/agentic-autopilot.new"
+mkdir -p "$NEW_DIR"
+tar -C "$REPO_ROOT" --exclude=.git --exclude=.github --exclude=tests --exclude=.gitattributes -cf - . | tar -C "$NEW_DIR" -xf -
+rm -rf "$WORK/wp/wp-content/plugins/agentic-autopilot"
+mv "$NEW_DIR" "$WORK/wp/wp-content/plugins/agentic-autopilot"
 
 echo "=== Run checks after upgrade ==="
 
@@ -153,7 +166,7 @@ echo "PASS: Settings preserved (instant_navigation=true, llms_txt=true)"
 # Check 3: Version constant matches
 echo "Check 3: Version constant matches..."
 VERSION_FROM_CONSTANT=$($WP eval 'echo AGENTIC_AUTOPILOT_VERSION;' 2>/dev/null || echo "unknown")
-VERSION_FROM_HEADER=$(grep "Version:" /home/user/wp-autopilot/agentic-autopilot.php | head -1 | cut -d' ' -f2)
+VERSION_FROM_HEADER=$(sed -n 's/^[ \t\/*#@]*Version:[ \t]*\([^ \t]*\).*/\1/p' "$REPO_ROOT/agentic-autopilot.php" | head -1)
 echo "Version from constant: $VERSION_FROM_CONSTANT"
 echo "Version from header: $VERSION_FROM_HEADER"
 if [ "$VERSION_FROM_CONSTANT" != "$VERSION_FROM_HEADER" ]; then
@@ -265,6 +278,15 @@ echo "PASS: Plugin deactivate/reactivate successful"
 
 # Final success message
 echo ""
+# Check 10: uninstall removes our data
+echo "Check 10: Uninstall cleans up..."
+$WP plugin uninstall agentic-autopilot --deactivate
+if $WP option get agentic_autopilot >/dev/null 2>&1; then
+	echo "ERROR: option agentic_autopilot still exists after uninstall"
+	exit 1
+fi
+echo "PASS: Uninstall removed the settings"
+
 echo "========================================="
 echo "SMOKE OK php=$($PHP -v | head -1 | awk '{print $2}') wp=$WP_VERSION"
 echo "========================================="
