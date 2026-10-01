@@ -3,7 +3,7 @@
  * Plugin Name:       Agentic Autopilot
  * Plugin URI:        https://github.com/askreikaco/agentic-autopilot
  * Description:       Make WordPress feel instant and ready for AI agents: llms.txt for AI search, speculative prerender on hover, Jetpack Monitor-only mode, MCP Adapter installation, and GitHub auto-updates.
- * Version:           1.3.0
+ * Version:           1.4.0
  * Requires at least: 6.8
  * Requires PHP:      7.4
  * Author:            REIKA
@@ -18,7 +18,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'AGENTIC_AUTOPILOT_VERSION', '1.3.0' );
+define( 'AGENTIC_AUTOPILOT_VERSION', '1.4.0' );
 define( 'AGENTIC_AUTOPILOT_FILE', __FILE__ );
 define( 'AGENTIC_AUTOPILOT_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -28,6 +28,8 @@ require_once AGENTIC_AUTOPILOT_DIR . 'includes/class-jetpack-monitor-only.php';
 require_once AGENTIC_AUTOPILOT_DIR . 'includes/class-github-updater.php';
 require_once AGENTIC_AUTOPILOT_DIR . 'includes/class-llms-txt.php';
 require_once AGENTIC_AUTOPILOT_DIR . 'includes/class-mcp-adapter.php';
+require_once AGENTIC_AUTOPILOT_DIR . 'includes/blueprint/class-blueprint-github.php';
+require_once AGENTIC_AUTOPILOT_DIR . 'includes/blueprint/class-blueprint.php';
 
 add_action(
 	'plugins_loaded',
@@ -41,6 +43,8 @@ add_action(
 			array( 'Agentic_Autopilot_GitHub_Updater', 'init' ),
 			array( 'Agentic_Autopilot_Llms_Txt', 'init' ),
 			array( 'Agentic_Autopilot_Mcp_Adapter', 'init' ),
+			array( 'Agentic_Autopilot_Blueprint_GitHub', 'init' ),
+			array( 'Agentic_Autopilot_Blueprint', 'init' ),
 		);
 		foreach ( $modules as $module ) {
 			try {
@@ -53,3 +57,5 @@ add_action(
 	},
 	1
 );
+
+register_deactivation_hook( __FILE__, array( 'Agentic_Autopilot_Blueprint', 'deactivate' ) );

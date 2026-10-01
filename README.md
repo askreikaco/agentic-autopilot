@@ -4,12 +4,86 @@ Free, open-source WordPress plugin that makes WordPress instant and ready for AI
 
 | Feature | What it does |
 |---|---|
+| **Blueprint** | Connect any GitHub repo to install and update a set of plugins and themes. Useful for setting up new sites quickly from a base set. See the [Blueprint repo](#blueprint-repo) section below. |
 | llms.txt for AI agents | Publishes a machine-readable site index at `/llms.txt` for AI search engines and LLM agents to discover your site's structure and content. See [llmstxt.org](https://llmstxt.org). |
 | MCP Adapter | One-click download and activation of the official WordPress MCP Adapter, so AI agents (Claude, ChatGPT, Cursor…) can use this site's abilities over the Model Context Protocol. Automatically kept updated from GitHub until WordPress.org adoption. |
 | Instant navigation | Configures WordPress' built-in Speculation Rules (6.8+): prerender on hover, on click, or eagerly; extra excluded paths (`/*.pdf`, `/*.zip` by default). |
 | Jetpack: Monitor only | Keeps Jetpack's Downtime Monitor and makes every other module unavailable. |
 
 Everything is off until enabled in **Settings → Agentic Autopilot**.
+
+## Blueprint repo
+
+**Blueprint** is a gateway that connects a WordPress site to any GitHub repo to install and keep updated a set of plugins and themes. Use it to bootstrap new sites quickly from a pre-configured base.
+
+**Blueprint does not import settings itself.** Config import is handled by each plugin's own import tool, a script, or an AI agent.
+
+### How it works
+
+1. Point Blueprint to a GitHub repo (yours or anyone's public repo).
+2. The repo contains a `catalog.json` at the root (or a custom path) listing plugins and themes:
+   ```json
+   [
+     {
+       "type": "plugins",
+       "slug": "acf",
+       "name": "ACF",
+       "version": "6.8.0",
+       "main_file": "acf.php",
+       "location": "plugins/acf.zip"
+     },
+     {
+       "type": "config",
+       "slug": "yoast-settings",
+       "name": "Yoast SEO settings",
+       "location": "config/yoast.json",
+       "for": "wordpress-seo",
+       "notes": "Import in Yoast > Tools > Import"
+     }
+   ]
+   ```
+3. In **Settings → Blueprint**, connect a repo. Each package is a standard WordPress .zip (plugin or theme with top folder = slug).
+4. Optionally enable auto-install (daily) or auto-update. Exclude individual items as needed.
+5. Blueprint injected items into WordPress' update checks; the Plugins/Themes screens show updates normally.
+
+### Configuration
+
+- **Repository**: GitHub repo (owner/name), public or private (with token).
+- **Branch/Ref**: Optional; uses the repo's default branch if empty.
+- **Catalog Path**: Relative path to catalog.json (default: `catalog.json`).
+- **Auto Install**: Automatically install missing items daily.
+- **Activate After Install**: Activate plugins upon install (themes are never auto-activated).
+- **Auto Update**: Automatically update managed items if a new version is available.
+- **AI Agents**: Expose Blueprint abilities to MCP clients (Claude, ChatGPT…) so agents can list, install, and fetch config files.
+
+### Pause guard
+
+If the legacy **REIKA Blueprint** plugin is active, Agentic Autopilot's Blueprint pauses automatically to prevent two updaters fighting over the same items. Deactivate the REIKA plugin to let Agentic Autopilot take over.
+
+### Catalog format (catalog.json)
+
+Each item in the JSON array:
+
+- **type** (required): `"plugins"`, `"themes"`, or `"config"`.
+- **slug** (required): Item slug (alphanumeric, dashes, dots, underscores).
+- **name** (required): Human-readable name.
+- **version** (required for plugins/themes): Semantic version (e.g., `"1.0.0"`).
+- **main_file** (required for plugins): Main plugin file (e.g., `"acf.php"`).
+- **location** (required): Relative path in the repo (must be `.zip` for plugins/themes).
+- **for** (optional, config only): Which plugin this config is for.
+- **notes** (optional): Import instructions.
+
+**Validation**: Blueprint validates every item and skips invalid ones, showing warnings on the admin page.
+
+### AI agent abilities
+
+When enabled, Blueprint exposes three abilities for AI agents:
+
+- **agentic-autopilot/blueprint-list**: List all items and config files.
+- **agentic-autopilot/blueprint-install**: Install a plugin or theme.
+- **agentic-autopilot/blueprint-get-config**: Fetch a config file for import.
+
+Requires the Abilities API (WordPress 6.9+).
 
 ## Install / update
 
