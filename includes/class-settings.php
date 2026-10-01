@@ -29,6 +29,7 @@ final class Agentic_Autopilot_Settings {
 			'jetpack_monitor_only'   => false,
 			'llms_txt'               => false,
 			'llms_txt_intro'         => '',
+			'mcp_auto_update'        => true,
 		);
 	}
 
@@ -93,6 +94,7 @@ final class Agentic_Autopilot_Settings {
 		$out['instant_navigation']   = ! empty( $input['instant_navigation'] );
 		$out['jetpack_monitor_only'] = ! empty( $input['jetpack_monitor_only'] );
 		$out['llms_txt']             = ! empty( $input['llms_txt'] );
+		$out['mcp_auto_update']      = ! empty( $input['mcp_auto_update'] );
 
 		if ( isset( $input['speculation_mode'] ) && in_array( $input['speculation_mode'], array( 'prefetch', 'prerender' ), true ) ) {
 			$out['speculation_mode'] = $input['speculation_mode'];
@@ -218,9 +220,69 @@ final class Agentic_Autopilot_Settings {
 						</td>
 					</tr>
 				</table>
+				<h2><?php esc_html_e( 'AI agents (MCP)', 'agentic-autopilot' ); ?></h2>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Keep updated', 'agentic-autopilot' ); ?></th>
+						<td>
+							<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[mcp_auto_update]" value="1" <?php checked( $s['mcp_auto_update'] ); ?>> <?php esc_html_e( 'Install MCP Adapter bug-fix updates automatically (for example 0.6.1 to 0.6.2). Bigger updates wait on the Plugins screen for you.', 'agentic-autopilot' ); ?></label>
+						</td>
+					</tr>
+				</table>
 				<?php submit_button(); ?>
 			</form>
+			<?php self::render_mcp_status(); ?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Render the MCP Adapter status box.
+	 */
+	private static function render_mcp_status() {
+		// Show success or error notice.
+		if ( isset( $_GET['aa_mcp'] ) ) {
+			$aa_mcp = sanitize_text_field( wp_unslash( $_GET['aa_mcp'] ) );
+			if ( 'ok' === $aa_mcp ) {
+				echo '<div class="notice notice-success"><p>';
+				esc_html_e( 'MCP Adapter installed and activated successfully.', 'agentic-autopilot' );
+				echo '</p></div>';
+			} elseif ( 'error' === $aa_mcp && isset( $_GET['aa_mcp_msg'] ) ) {
+				$msg = sanitize_text_field( wp_unslash( $_GET['aa_mcp_msg'] ) );
+				echo '<div class="notice notice-error"><p>';
+				esc_html_e( 'Error: ', 'agentic-autopilot' );
+				echo esc_html( $msg );
+				echo '</p></div>';
+			}
+		}
+
+		$status = Agentic_Autopilot_Mcp_Adapter::status();
+
+		echo '<div class="card" style="margin-top: 20px; padding: 20px;">';
+		echo '<h3>' . esc_html__( 'WordPress MCP Adapter', 'agentic-autopilot' ) . '</h3>';
+		echo '<p>' . esc_html__( 'The official WordPress MCP Adapter lets AI agents (Claude, ChatGPT, Cursor…) use this site\'s abilities over the Model Context Protocol. It is downloaded from github.com/WordPress/mcp-adapter, not bundled.', 'agentic-autopilot' ) . '</p>';
+
+		if ( 'unsupported' === $status ) {
+			echo '<p><strong>' . esc_html__( 'Needs WordPress 6.9 or newer.', 'agentic-autopilot' ) . '</strong></p>';
+		} elseif ( 'builtin' === $status ) {
+			echo '<p><strong>' . esc_html__( 'MCP is already built into WordPress or provided by another plugin. Nothing to install.', 'agentic-autopilot' ) . '</strong></p>';
+		} elseif ( 'missing' === $status || 'inactive' === $status ) {
+			// Only show the form if the user can install plugins.
+			if ( current_user_can( 'install_plugins' ) ) {
+				$button_label = ( 'missing' === $status ) ? __( 'Download & activate MCP Adapter', 'agentic-autopilot' ) : __( 'Activate MCP Adapter', 'agentic-autopilot' );
+				echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display: inline;">';
+				echo '<input type="hidden" name="action" value="' . esc_attr( Agentic_Autopilot_Mcp_Adapter::ACTION ) . '">';
+				wp_nonce_field( Agentic_Autopilot_Mcp_Adapter::ACTION );
+				submit_button( $button_label, 'primary', 'submit', false );
+				echo '</form>';
+			}
+		} elseif ( 'active' === $status ) {
+			/* translators: %s: MCP Adapter version. */
+			echo '<p><strong>' . esc_html( sprintf( __( 'MCP Adapter %s is active.', 'agentic-autopilot' ), Agentic_Autopilot_Mcp_Adapter::installed_version() ) ) . '</strong></p>';
+			echo '<p>' . esc_html__( 'Endpoint:', 'agentic-autopilot' ) . ' <code>' . esc_html( rest_url( 'mcp/mcp-adapter-default-server' ) ) . '</code></p>';
+		}
+
+		echo '<p style="margin-top: 15px; color: #666;">' . esc_html__( 'AI clients sign in as a WordPress user with an Application Password. Only abilities marked public are exposed, and normal permission checks apply.', 'agentic-autopilot' ) . '</p>';
+		echo '</div>';
 	}
 }

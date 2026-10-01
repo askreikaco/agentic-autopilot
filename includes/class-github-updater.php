@@ -58,11 +58,14 @@ final class Agentic_Autopilot_GitHub_Updater {
 						$package = (string) $asset['browser_download_url'];
 					}
 				}
-				$release = array(
-					'version' => ltrim( (string) $body['tag_name'], 'vV' ),
-					'package' => $package,
-					'url'     => (string) $body['html_url'],
-					'notes'   => (string) ( $body['body'] ?? '' ),
+				$release = array_merge(
+					array(
+						'version' => ltrim( (string) $body['tag_name'], 'vV' ),
+						'package' => $package,
+						'url'     => (string) $body['html_url'],
+						'notes'   => (string) ( $body['body'] ?? '' ),
+					),
+					self::requirements( self::REPO, (string) $body['tag_name'], self::SLUG . '.php' )
 				);
 			}
 		}
@@ -94,9 +97,45 @@ final class Agentic_Autopilot_GitHub_Updater {
 			'version'      => $release['version'],
 			'url'          => $release['url'],
 			'package'      => $release['package'],
-			'requires'     => '6.8',
-			'requires_php' => '7.4',
+			// The release's own minimums, so WordPress refuses an update this site cannot run.
+			'requires'     => ! empty( $release['requires'] ) ? $release['requires'] : '6.8',
+			'requires_php' => ! empty( $release['requires_php'] ) ? $release['requires_php'] : '7.4',
 		);
+	}
+
+	/**
+	 * Read "Requires at least" / "Requires PHP" from a plugin's main file at a release tag.
+	 *
+	 * Shared with the MCP Adapter updates. Empty strings when the file cannot be read.
+	 *
+	 * @param string $repo GitHub "owner/name".
+	 * @param string $tag  Release tag.
+	 * @param string $file Main plugin file, relative to the repository root.
+	 * @return array{requires:string, requires_php:string}
+	 */
+	public static function requirements( $repo, $tag, $file ) {
+		$out      = array(
+			'requires'     => '',
+			'requires_php' => '',
+		);
+		$response = wp_remote_get(
+			'https://raw.githubusercontent.com/' . $repo . '/' . rawurlencode( $tag ) . '/' . $file,
+			array( 'timeout' => 10 )
+		);
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			return $out;
+		}
+		$head = substr( (string) wp_remote_retrieve_body( $response ), 0, 8192 );
+		$map  = array(
+			'requires'     => 'Requires at least',
+			'requires_php' => 'Requires PHP',
+		);
+		foreach ( $map as $key => $header ) {
+			if ( preg_match( '/^[ \t\/*#@]*' . preg_quote( $header, '/' ) . ':(.*)$/mi', $head, $m ) ) {
+				$out[ $key ] = sanitize_text_field( trim( $m[1] ) );
+			}
+		}
+		return $out;
 	}
 
 	/**
